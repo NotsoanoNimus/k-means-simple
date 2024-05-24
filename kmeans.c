@@ -14,6 +14,7 @@
 kmeans_result
 compute_kmeans(kmeans_meta *meta)
 {
+    /* Need some basic assertions that guarantee the input structure's integrity. */
     assert(meta);
 
     assert(meta->get_centroid);
@@ -28,13 +29,16 @@ compute_kmeans(kmeans_meta *meta)
 
     assert(meta->iterations > 0);
 
+    /* Local variables. */
     int iterations = 0;
     int clusters_size = sizeof(int) * meta->num_objects;
     int *clusters_previous = malloc(clusters_size);
     kmeans_result result;
 
+    /* Initialize all cluster assignments to 0. */
     memset(meta->cluster_assignments, 0, clusters_size);
 
+    /* Loop until breaking. */
     while (1) {
         /* Preserve the previous set of cluster assignments. */
         memcpy(clusters_previous, meta->cluster_assignments, clusters_size);

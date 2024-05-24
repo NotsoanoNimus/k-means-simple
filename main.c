@@ -67,9 +67,9 @@ calculate_centroid(kmeans_meta *self,
 int
 main()
 {
-    int k = 6;
-    int spread = 2;
-    int points_per_cluster = 30;
+    int k = 13;
+    int spread = 10;
+    int points_per_cluster = 180000;
     unsigned long start_time, duration;
     kmeans_result result;
 
@@ -139,6 +139,14 @@ main()
            duration > 0
             ? ((1.0 * m_point.current_iterations) / duration)
             : m_point.current_iterations);
+
+    printf("Points per cluster:\n");
+    for (int i = 0; i < m_point.num_centroids; ++i) {
+        int numpts = 0;
+        for (int j = 0; j < m_point.num_objects; ++j)
+            if (m_point.cluster_assignments[j] == i) ++numpts;
+        printf("\tcentroid[%d]: %d\n", i, numpts);
+    }
 
     /* If the exit code is not OK, stop. */
     if (KMEANS_OK != result) {

@@ -14,6 +14,7 @@
 #include "kmeans.h"
 
 
+/* Two-dimensional input data type as points. */
 typedef struct point
 {
     double x;
@@ -21,6 +22,7 @@ typedef struct point
 } point;
 
 
+/* Gets the linear distance between two point structures. */
 static
 double
 point_distance(const object left,
@@ -36,56 +38,73 @@ point_distance(const object left,
 }
 
 
+/* Get and set the new centroid location for a given cluster ID. */
 static
 void
 calculate_centroid(kmeans_meta *self,
                    const int cluster)
 {
+    /* No objects? Don't do anything. */
     if (self->num_objects <= 0) return;
 
+    /* Local variables. */
     point sum = { 0.0, 0.0 };
     int num_in_cluster = 0;
 
+    /* Iterate all objects in the input data set. */
     for (int i = 0; i < self->num_objects; ++i) {
         /* Only care about objects associated with this cluster's centroid. */
         if (self->cluster_assignments[i] != cluster) continue;
 
+        /* Compute the sums of each dimension. */
         sum.x += ((((point **)self->input_objects)[i])->x);
         sum.y += ((((point **)self->input_objects)[i])->y);
+
+        /* Track how many points ended up in this cluster. */
         ++num_in_cluster;
     }
 
+    /* If any points were present in the cluster, get an average in each dimension. */
     if (num_in_cluster) {
         sum.x /= num_in_cluster;
         sum.y /= num_in_cluster;
 
+        /* Copy the sum result as the new centroid for this cluster ID. */
         memcpy(self->centroids[cluster], &sum, sizeof(point));
     }
 }
 
 
+/* Main entrypoint. */
 int
 main()
 {
-    int k = 13;
-    int spread = 10;
-    int points_per_cluster = 180000;
+    /* Choose different values here to control the experiment. */
+    int k = 13;   /* Amount of clusters. */
+    int spread = 10;   /* How distant or wide data points should be initially spread. */
+    int points_per_cluster = 180000;   /* How many points are generated per cluster. */
+
+    /* Other local variables. */
     unsigned long start_time, duration;
     kmeans_result result;
 
+    /* Wire up the meta structure to track details about the K-Means computation. */
     kmeans_meta m_point = {
             .num_centroids = k,
             .num_objects = k * points_per_cluster,
-            .iterations = 1000,
+            .iterations = 1000,   /* Set a maximum amount of iterations for convergence. */
             .get_centroid = calculate_centroid,
             .linear_distance = point_distance,
     };
+
+    /* Allocate heap space for other types where necessary. */
     m_point.input_objects = calloc(m_point.num_objects, sizeof(object));
     m_point.cluster_assignments = calloc(m_point.num_objects, sizeof(int));
     m_point.centroids = calloc(m_point.num_centroids, sizeof(object));
 
     point *pts = calloc(m_point.num_objects, sizeof(point));
 
+    /* Seed the random number generator with the current time. */
     srand(time(NULL));
 
     /* Initialize groups of points as inputs to the algorithm. */
@@ -128,11 +147,13 @@ main()
                ((point *)(m_point.centroids[i]))->y);
     }
 
+    /* Start the computation and track its duration. */
     printf("-- OK\nRunning K-means computation...\n");
     start_time = time(NULL);
     result = compute_kmeans(&m_point);
     duration = (time(NULL) - start_time);
 
+    /* Output some runtime details. */
     printf("-- OK\n\nIteration count: %lu\n       Duration: %lu\n",
            m_point.current_iterations, duration);
     printf("           Pace: %.3f iterations every second\n\n",
@@ -154,7 +175,7 @@ main()
         return 1;
     }
 
-    /* Finally, print the full results. */
+    /* Finally, print the full results in a comma-separated value (CSV) format. */
     printf("X, Y, Cluster\n");
     for (int i = 0; i < m_point.num_objects; ++i) {
         point *p = (point *)(m_point.input_objects[i]);
@@ -165,6 +186,7 @@ main()
             printf("X, X, %d\n", m_point.cluster_assignments[i]);
     }
 
+    /* Free allocated heap space. Not necessary (since this is the end of main), but clean. */
     free(m_point.input_objects);
     free(m_point.centroids);
     free(m_point.cluster_assignments);

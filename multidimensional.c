@@ -2,6 +2,10 @@
  * multidimensional.c
  *
  * Main executable for running k-means against a multi-dimensional set of inputs.
+ * 
+ * IMPORTANT NOTE: Code from this executable is pretty much the same as main.c,
+ *  except the dimensionality of the randomly-generated input data is adjusted to
+ *  8 instead of 2.
  */
 
 #include <math.h>
